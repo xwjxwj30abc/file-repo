@@ -68,8 +68,9 @@ vim /etc/security/limits.conf
 2.设置 vm.swappiness Linux 内核参数
     vm.swappiness 是一个 Linux 内核参数，用于控制将内存页交换到磁盘的幅度。它可以设为介于 0-100 之间的值；值越高，内核寻找不活动的内存页并将其交换到磁盘的幅度就越大。
    通过cat /proc/sys/vm/swappiness可以了解 vm.swappiness 当前设置的值；在大多数系统中，它默认设为 60。这不适用于 Hadoop 群集节点，因为这可能导致进程被换出，即使存在可用内存。这可能会影响稳定性和性能，并可能导致出现问题，比如重要系统后台程序出现冗长的垃圾数据收集暂停。Cloudera 建议将此参数设置为 0；
-# sysctl -w vm.swappiness=0 暂时有效
-#echo 0 > /proc/sys/vm/swappiness 永久有效
+　sysctl -w vm.swappiness=0 暂时有效
+　echo 0 > /proc/sys/vm/swappiness 永久有效
+
 
 ### <2>. 使用 Key-Value Store Indexer服务
 对 HBase 群集中的表的列系列进行 索引：
