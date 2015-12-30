@@ -1,4 +1,4 @@
-CDH5启动服务的顺序如下
+# CDH5启动服务的顺序如下
 
 Cloudera Management Service
 ZooKeeper
@@ -15,7 +15,9 @@ Sqoop
 Hue
 按正确的顺序启动和停止具有依赖关系的服务尤为重要。
 
-<1>. 添加新主机到集群
+##相关操作
+
+### <1>. 添加新主机到集群
   可以用同一机制安装 Oracle JDK、CDH、Cloudera Manager Agent 软件包.在每个 Cloudera Manager Agent 主机上，通过在cm安装目录下etc/cloudera-scm-agent/config.ini 配置文件中设置以下属性，配置 Cloudera Manager Agent 以指向 Cloudera Manager Server：
 属性	    说明
 server_host	运行 Cloudera Manager Server 的主机的名称。
@@ -69,7 +71,7 @@ vim /etc/security/limits.conf
 # sysctl -w vm.swappiness=0 暂时有效
 #echo 0 > /proc/sys/vm/swappiness 永久有效
 
-<2>. 使用 Key-Value Store Indexer服务
+### <2>. 使用 Key-Value Store Indexer服务
 对 HBase 群集中的表的列系列进行 索引：
 １．在 HBase 列系列上启用复制
 ２．创建集合和配置
@@ -228,7 +230,7 @@ hbase(main):001:0> put 'record', 'row1', 'data', 'value'
 hbase(main):002:0> put 'record', 'row2', 'data', 'value2'
 如果 put 操作成功，等待几秒钟，导航至 SolrCloud UI 查询页面并查询数据。在 Solr 中备注更新的行。
 
-<3>. Impala与parquet
+### <3>. Impala与parquet
 1. 测试parquet格式的impala表的查询速度
 
 克隆一个现有表的列名和数据类型　create table parquet_table_name LIKE other_table_name STORED AS PARQUET;
@@ -253,7 +255,7 @@ hbase(main):002:0> put 'record', 'row2', 'data', 'value2'
 　　如果通过hbase存储，impala查询hbase表，则impala查询中必须要有针对hbase行键的过滤语句即where keyrow <> between等，在hbase边过滤出部分数据传到impala，再在impala端进行部分列的统计和查询，这样所需内存就会相应减少。
 或者完全使用impala存储数据表，采用parquet格式存储，可以大大优化类似select col1,col2 from parquet_table where keyrow between startRow and stopRow and col3=123的查询。select中选取的列和where中限制的列越少，查询越快速。
 　　如果数据存在于 Impala 之外，并且是其它格式。首先，使用 LOAD DATA 或 CREATE EXTERNAL TABLE ... LOCATION 语句把数据导入使用对应文件格式的 Impala 表中。然后，使用 INSERT...SELECT 语句将数据复制到 Parquet 表中，并转换为 Parquet 格式。
-<4>. 通过impala/hive查询hbase表
+### <4>. 通过impala/hive查询hbase表
 Impala CREATE TABLE 语句当前不支持所需的全部子句，因此需要切换到 Hive 来创建表，然后再返回 Impala 和 impala-shell 解释程序发出查询
 
 一：用hive访问一个已经在hbase中存在的表(hive)
@@ -284,7 +286,7 @@ Impala 不应以 root 用户身份运行。使用直接读取实现最佳 Impala
 二：使用impala查询hbase表（impala-shell）
 http://www.cloudera.com/content/cloudera/zh-CN/documentation/core/v5-3-x/topics/impala_hbase.html
 在 Hive 中创建表后，例如在本示例中创建的是 HBase 映射表，下次连接至 Impala 时发布 INVALIDATE METADATA table_name 语句，让 Impala 能够识别新表(登录hbase:hbase shell)
-<5> HBase修改Table压缩格式步骤
+### <5> HBase修改Table压缩格式步骤
 修改HBase压缩算法很简单，只需要如下几步：
 1. hbase shell命令下，disable相关表：
 disable 'test'
@@ -305,8 +307,8 @@ major_compact 'test'
 
 describe一下该表，可以看到HBase 表压缩格式修改完毕。
 
-错误解决案例：
-<1>. 一台机器的datanode连接不上namenode
+## 错误解决案例
+### <1>. 一台机器的datanode连接不上namenode
 　　在编辑/etc/hosts后，cloudera manager可能由于无法解析内网ip，而映射到公网地址，而namenode的dfs_hosts_allow.txt文件中已经不包括该内网ip,自动修改为公网ip,而后来的datanode节点尝试连接namenode节点就会导致拒绝连接问题。报如下错误。
 “sudo -u hdfs hdfs dfsadmin -refreshNodes”运行这个命令cm就会根据主机刷新允许连接的机器。Running this will refresh the allow list based on the hosts known to CM
 该文件dfs_hosts_allow.txt 位置：
@@ -320,19 +322,19 @@ Block pool BP-1466172755-192.168.31.160-1441511616936 (Datanode Uuid null) servi
 Initialization failed for Block pool BP-1466172755-192.168.31.160-1441511616936 (Datanode Uuid null) service to bigdata4/192.168.31.160:8022 Datanode denied communication with namenode because the host is not in the include-list: DatanodeRegistration(192.168.32.199, datanodeUuid=519afc9d-20b9-4abb-9713-02fb4e9141b9, infoPort=50075, ipcPort=50020, storageInfo=lv=-56;cid=cluster22;nsid=862467695;c=0)
 
 
-<2>. impala daemon在查询时总会莫名其妙挂掉
+### <2>. impala daemon在查询时总会莫名其妙挂掉
 由于利用hue　web UI删除metestore中数据并没有真正删除数据表，导致多次导入数据到同一张表中，致使表数据越来越大，最后，每次运行impala查询都会导致impala daemon进程挂掉。
 解决办法：利用hive shell 指令删除表drop table tableName;然后重新导入数据到metastore，impala-shell :refresh tableName即可。
 
-<3>. sqoop2的map程序总是停留在map->map阶段
+### <3>. sqoop2的map程序总是停留在map->map阶段
 由于网络原因，在一定时间内连接数据库超时，就会出现这个问题，解决办法就是设置连接超时时间／在临近的网络环境中安装mysql由于在同一个网络环境中，就不会出现这个问题。
 
-<4>. hive创建hbase映射表出错
+### <4>. hive创建hbase映射表出错
 错误类型：
 两部分字段数目不匹配； columns has 54 elements while hbase.columns.mapping has 55 elements (counting the key if implicit))
 不支持的数据类型;hive里面不支持date时间格式数据，将其声明为string即可．
 
-<5>. 连接CDH5　Solr集群出错
+### <5>. 连接CDH5　Solr集群出错
  KeeperErrorCode = NoNode for /live_nodes
 
 配置：
@@ -347,7 +349,7 @@ cloudSolrServer = new CloudSolrServer("192.168.31.180:2181/solr");
 
 CDH5和一般Hadoop的CloudSolrServer创建的不同之处．
 
-<6>.新搭建的集群hue无法查看hbase相关表
+### <6>.新搭建的集群hue无法查看hbase相关表
  Enabling the HBase Browser application
 
 The HBase Browser application, new as of CDH4.4, depends on the HBase Thrift server for its functionality. The Thrift server role is not added by default when you install HBase, so in order to use the HBase Browser you must first add a Thrift Server role.
@@ -364,7 +366,7 @@ Go to the Service-Wide category.
 For the HBase Service property, make sure it is set to the HBase service for which you enabled the Thrift Server role(if you have more than one HBase service instance).
 In the HBase Thrift Server property, click in the edit field and select the Thrift Server role that Hue should use.
 Save Changes to have these configurations take effect.
-<7>. Spark配置
+### <7>. Spark配置
 
 1. 以yarn模式运行word count程序，报create log directory错误
 Error in creating log directory: file:/user/spark/applicationHistory//application_
@@ -376,7 +378,7 @@ Error in creating log directory: file:/user/spark/applicationHistory//applicatio
 CDH5上面运行spark 程序指令
 sudo -u hdfs spark-submit --class zx.soft.spark.basic.sql.JavaSparkSQL --master yarn  spark-demo-0.0.1-SNAPSHOT.jar
 
-<8>. 部分操作
+### <8>. 部分操作
 hadoop操作：
 杀死job,停止运行mapreduce任务
 sudo -u hdfs hadoop job -kill job_1429523909440_0013
